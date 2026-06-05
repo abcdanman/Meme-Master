@@ -708,20 +708,60 @@ function initGame() {
   document.getElementById('game-over').className='';
   document.getElementById('game-over').style.display='none';
 
+  // ── Load settings ──
+  const cfg      = JSON.parse(localStorage.getItem('ml_settings')||'{}');
+  const handSize = Math.max(3, Math.min(6, parseInt(cfg.handSize)||4));
+
+  // ── Load player profile ──
+  const playerName = localStorage.getItem('ml_name') || 'You';
+  const avatarId   = localStorage.getItem('ml_avatar') || 'doge';
+  const AVATAR_IMGS = {
+    doge:'https://i.kym-cdn.com/photos/images/original/000/581/296/c09.jpg',
+    fire_dog:'https://i.imgflip.com/wxica.jpg',
+    grumpy_cat:'https://i.kym-cdn.com/entries/icons/facebook/000/011/365/GRUMPYCAT.jpg',
+    trollface:'https://i.kym-cdn.com/entries/icons/facebook/000/000/091/TrollFace.jpg',
+    drake:'https://i.imgflip.com/30b1gx.jpg',
+    distracted_bf:'https://i.imgflip.com/1ur9b0.jpg',
+    surprised_pika:'https://i.imgflip.com/2kbn1e.jpg',
+    woman_cat:'https://i.imgflip.com/345v97.jpg',
+    pepe:'https://i.kym-cdn.com/entries/icons/original/000/000/142/feelsgoodman.png',
+    chad:'https://i.kym-cdn.com/entries/icons/facebook/000/026/152/gigachadd.jpg',
+    galaxy_brain:'https://i.imgflip.com/1jwhww.jpg',
+    harold:'https://i.imgflip.com/gk5el.jpg',
+    minion:'https://i.imgflip.com/26jxvz.jpg',
+    salt_bae:'https://i.kym-cdn.com/entries/icons/facebook/000/021/971/Salt-Bae-001.jpg',
+    two_buttons:'https://i.imgflip.com/1g8my4.jpg',
+    expand_brain:'https://i.imgflip.com/1jwhww.jpg',
+    confused_math:'https://i.kym-cdn.com/entries/icons/facebook/000/021/464/14608107_1180665285312703_1558693314_n.jpg',
+    baby_yoda:'https://i.kym-cdn.com/entries/icons/mobile/000/031/827/bright.jpg',
+    shrek:'https://i.kym-cdn.com/entries/icons/facebook/000/012/178/shrek.jpg',
+    mock_spong:'https://i.imgflip.com/1otk96.jpg',
+    stonks:'https://i.kym-cdn.com/entries/icons/facebook/000/029/959/Screen_Shot_2019-06-05_at_1.26.32_PM.jpg',
+    leonidas:'https://i.kym-cdn.com/entries/icons/facebook/000/000/026/Gerard-Butler-This-Is-Sparta.jpg',
+    uno_reverse:'https://i.imgflip.com/3lmzyx.jpg',
+    bernie:'https://i.imgflip.com/3oevdk.jpg',
+    disaster_girl:'https://i.imgflip.com/23ls.jpg'
+  };
+  const avatarUrl = AVATAR_IMGS[avatarId] || AVATAR_IMGS['doge'];
+
+  // Apply avatar to player hero portrait
+  const heroEl = document.getElementById('player-hero');
+  heroEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;" onerror="this.outerHTML='🧙'"><div class="hero-hp" id="player-hp">30</div>`;
+
   G = {
     player: newPlayer(false),
     ai: newPlayer(true),
     turn: 'player',
     turnNum: 1,
-    sel: null,       // selected field card for attack
+    sel: null,
     gameOver: false
   };
 
-  for(let i=0;i<4;i++) drawCard(G.player);
-  for(let i=0;i<4;i++) drawCard(G.ai);
+  for(let i=0;i<handSize;i++) drawCard(G.player);
+  for(let i=0;i<handSize;i++) drawCard(G.ai);
 
   clearLog();
-  log('⚔️ MEME LEGENDS: CARD BATTLE starts! May the dankest memes win!','ev');
+  log(`⚔️ ${playerName} vs AI! May the dankest memes win!`,'ev');
   startTurn('player');
 }
 
@@ -1148,38 +1188,77 @@ function recalcGangs(p) { recalcGang(p); }
 // ═══════════════════════════════════════════
 function doAI() {
   if(G.gameOver) return;
+
+  // ── Read settings ──
+  const cfg  = JSON.parse(localStorage.getItem('ml_settings')||'{}');
+  const diff = cfg.diff  || 'normal';
+  const spd  = cfg.speed || 'normal';
+  const baseDelay = spd==='fast' ? 280 : spd==='slow' ? 1000 : 580;
+
   document.getElementById('ai-thinking').style.display='block';
 
   const ai=G.ai, pl=G.player;
   const queue=[];
 
-  // --- Play cards (greedy: most expensive first) ---
+  // ── Play cards ──
   const affordable = [...ai.hand].filter(c=>c.cost<=ai.mana).sort((a,b)=>b.cost-a.cost);
   affordable.forEach(card=>{
     if(ai.mana>=card.cost && ai.field.length<5) {
+      if(diff==='easy' && Math.random()<0.40) return; // Easy skips 40% of cards
       queue.push(()=>playCard(card,ai));
     }
   });
 
-  // --- Attack phase ---
-  // Check lethal
+  // ── Attack phase ──
   const canLethal = () => {
     const totalDmg = ai.field.filter(c=>!c.exhausted).reduce((s,c)=>s+getEffAtk(c),0);
     return totalDmg >= pl.hp && pl.field.every(c=>!(c.kw&&c.kw.includes('taunt')));
   };
 
   queue.push(()=>{
-    if(canLethal()) {
+    // Hard & Normal always check lethal; Easy only 50% of the time
+    const checkLethal = diff==='easy' ? Math.random()>0.5 : true;
+    if(checkLethal && canLethal()) {
       ai.field.filter(c=>!c.exhausted).forEach(c=>{
         queue.splice(0,0,()=>doAttackHero(c,ai,pl));
       });
-    } else {
-      ai.field.filter(c=>!c.exhausted).forEach(card=>{
-        const tauntCards = pl.field.filter(c=>c.kw&&c.kw.includes('taunt'));
-        if(tauntCards.length) {
-          queue.push(()=>doAttack(card,ai,tauntCards[0],pl));
-        } else if(pl.field.length) {
-          // Kill cheapest (lowest HP that dies to our attack), else highest ATK
+      return;
+    }
+
+    ai.field.filter(c=>!c.exhausted).forEach(card=>{
+      const tauntCards = pl.field.filter(c=>c.kw&&c.kw.includes('taunt'));
+      if(tauntCards.length) {
+        queue.push(()=>doAttack(card,ai,tauntCards[0],pl));
+        return;
+      }
+
+      if(diff==='easy') {
+        // Easy: random target or go face
+        if(pl.field.length && Math.random()>0.45) {
+          const t = pl.field[Math.floor(Math.random()*pl.field.length)];
+          queue.push(()=>doAttack(card,ai,t,pl));
+        } else {
+          queue.push(()=>doAttackHero(card,ai,pl));
+        }
+      } else if(diff==='hard') {
+        // Hard: kill highest-value killable minion, else pressure face
+        if(pl.field.length) {
+          const killable = pl.field.filter(c=>c.curHp<=getEffAtk(card));
+          if(killable.length) {
+            const t = killable.reduce((a,b)=>a.curAtk>b.curAtk?a:b);
+            queue.push(()=>doAttack(card,ai,t,pl));
+          } else if(pl.field.some(c=>c.curAtk>=3)) {
+            const t = pl.field.reduce((a,b)=>a.curAtk>b.curAtk?a:b);
+            queue.push(()=>doAttack(card,ai,t,pl));
+          } else {
+            queue.push(()=>doAttackHero(card,ai,pl)); // pressure face on hard
+          }
+        } else {
+          queue.push(()=>doAttackHero(card,ai,pl));
+        }
+      } else {
+        // Normal: kill killable, else remove biggest threat
+        if(pl.field.length) {
           const killable = pl.field.filter(c=>c.curHp<=getEffAtk(card));
           if(killable.length) {
             const t = killable.reduce((a,b)=>a.curAtk>b.curAtk?a:b);
@@ -1191,13 +1270,13 @@ function doAI() {
         } else {
           queue.push(()=>doAttackHero(card,ai,pl));
         }
-      });
-    }
+      }
+    });
   });
 
-  // Execute queue with delay
+  // ── Execute queue ──
   let t=0;
-  queue.forEach(fn=>{ setTimeout(()=>{ if(!G.gameOver){ fn(); render(); } }, t); t+=600; });
+  queue.forEach(fn=>{ setTimeout(()=>{ if(!G.gameOver){ fn(); render(); } }, t); t+=baseDelay; });
 
   setTimeout(()=>{
     document.getElementById('ai-thinking').style.display='none';
