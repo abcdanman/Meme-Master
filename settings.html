@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — Meme Legends</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family:'Exo 2',sans-serif;
+  background:radial-gradient(ellipse at 50% 20%, #1a1a0a 0%, #0a0a05 70%);
+  min-height:100vh; color:#fff;
+  user-select:none;
+}
+
+/* ── HEADER ── */
+header {
+  display:flex; align-items:center; gap:14px;
+  padding:16px 24px;
+  background:rgba(0,0,0,.45);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  position:sticky; top:0; z-index:50;
+}
+.back-btn {
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.15);
+  color:#aaa; padding:7px 16px; border-radius:10px;
+  cursor:pointer; font-family:'Exo 2',sans-serif;
+  font-size:.85em; font-weight:600;
+  transition:all .2s; text-decoration:none;
+  display:inline-flex; align-items:center; gap:6px;
+}
+.back-btn:hover { background:rgba(255,255,255,.12); color:#fff; }
+header h1 {
+  font-family:'Cinzel',serif; font-size:1.2em;
+  background:linear-gradient(135deg,#ffdd88,#cc8800);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.apply-btn {
+  margin-left:auto;
+  background:linear-gradient(135deg,#3a2a00,#1a1200);
+  border:2px solid #cc8800; color:#ffcc44;
+  padding:8px 22px; border-radius:12px;
+  cursor:pointer; font-family:'Exo 2',sans-serif;
+  font-size:.9em; font-weight:700; transition:all .2s;
+}
+.apply-btn:hover { box-shadow:0 0 16px rgba(204,136,0,.5); transform:scale(1.04); }
+
+/* ── MAIN ── */
+main {
+  max-width:680px; margin:0 auto;
+  padding:28px 20px 60px;
+  display:flex; flex-direction:column; gap:10px;
+}
+
+/* ── SECTION ── */
+.section {
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px; overflow:hidden;
+  animation:fade-up .4s ease both;
+}
+.section:nth-child(2) { animation-delay:.05s; }
+.section:nth-child(3) { animation-delay:.1s; }
+.section:nth-child(4) { animation-delay:.15s; }
+
+@keyframes fade-up {
+  from { transform:translateY(16px); opacity:0; }
+  to   { transform:translateY(0);    opacity:1; }
+}
+
+.section-header {
+  padding:14px 20px;
+  background:rgba(255,255,255,.04);
+  border-bottom:1px solid rgba(255,255,255,.07);
+  font-size:.72em; font-weight:700;
+  text-transform:uppercase; letter-spacing:2px; color:#888;
+  display:flex; align-items:center; gap:8px;
+}
+
+/* ── SETTING ROW ── */
+.setting-row {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:16px; padding:16px 20px;
+  border-bottom:1px solid rgba(255,255,255,.04);
+  transition:background .15s;
+}
+.setting-row:last-child { border-bottom:none; }
+.setting-row:hover { background:rgba(255,255,255,.03); }
+
+.setting-info { flex:1; }
+.setting-name  { font-weight:600; font-size:.95em; }
+.setting-desc  { font-size:.72em; color:#666; margin-top:3px; line-height:1.4; }
+
+/* ── TOGGLE SWITCH ── */
+.toggle-wrap { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.toggle-label { font-size:.78em; color:#888; min-width:28px; text-align:right; }
+.toggle {
+  position:relative; width:46px; height:26px;
+  cursor:pointer; flex-shrink:0;
+}
+.toggle input { opacity:0; width:0; height:0; position:absolute; }
+.toggle-slider {
+  position:absolute; inset:0;
+  background:#1a1a2a; border:1.5px solid #333;
+  border-radius:13px; transition:all .25s;
+}
+.toggle-slider::before {
+  content:''; position:absolute;
+  width:18px; height:18px; border-radius:50%;
+  background:#555; left:3px; top:3px;
+  transition:all .25s;
+}
+.toggle input:checked + .toggle-slider { background:#1a3a1a; border-color:#44cc66; }
+.toggle input:checked + .toggle-slider::before { background:#44ff88; transform:translateX(20px); }
+
+/* ── SEGMENT CONTROL (difficulty/speed) ── */
+.segment {
+  display:flex; border-radius:12px; overflow:hidden;
+  border:1.5px solid rgba(255,255,255,.1);
+  flex-shrink:0;
+}
+.seg-btn {
+  background:none; border:none;
+  color:#666; padding:7px 14px;
+  font-family:'Exo 2',sans-serif; font-size:.8em; font-weight:700;
+  cursor:pointer; transition:all .2s;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+.seg-btn:last-child { border-right:none; }
+.seg-btn.active { color:#fff; }
+
+/* Difficulty colors */
+.seg-diff .seg-btn.active[data-val="easy"]   { background:#1a4a1a; color:#44ff88; }
+.seg-diff .seg-btn.active[data-val="normal"] { background:#1a3a4a; color:#44aaff; }
+.seg-diff .seg-btn.active[data-val="hard"]   { background:#4a1a1a; color:#ff5555; }
+
+/* Speed colors */
+.seg-speed .seg-btn.active { background:#2a2a00; color:#ffcc44; }
+
+/* ── CARD BACK PICKER ── */
+.card-backs {
+  display:flex; gap:10px; flex-wrap:wrap; padding:0 20px 16px;
+}
+.card-back-opt {
+  width:60px; height:84px;
+  border-radius:8px; border:2px solid rgba(255,255,255,.1);
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-size:1.6em; transition:all .2s; flex-shrink:0;
+}
+.card-back-opt:hover { border-color:rgba(255,255,255,.3); transform:scale(1.05); }
+.card-back-opt.selected { border-color:#cc8800; box-shadow:0 0 12px rgba(204,136,0,.4); }
+
+/* ── SLIDER ── */
+.slider-wrap { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.setting-slider {
+  -webkit-appearance:none;
+  width:130px; height:5px;
+  border-radius:3px; outline:none;
+  background:linear-gradient(to right, #cc8800 var(--pct,50%), #1a1a1a var(--pct,50%));
+  cursor:pointer;
+}
+.setting-slider::-webkit-slider-thumb {
+  -webkit-appearance:none;
+  width:16px; height:16px; border-radius:50%;
+  background:#ffcc44; border:2px solid #cc8800;
+  cursor:pointer;
+}
+.slider-val { font-size:.78em; color:#888; min-width:28px; text-align:center; font-weight:700; }
+
+/* ── DANGER ── */
+.danger-row { padding:16px 20px; display:flex; gap:10px; flex-wrap:wrap; }
+.danger-btn {
+  background:rgba(255,50,50,.07);
+  border:1.5px solid rgba(255,50,50,.25);
+  color:#ff7777; padding:9px 18px; border-radius:10px;
+  cursor:pointer; font-family:'Exo 2',sans-serif;
+  font-size:.82em; font-weight:700; transition:all .2s;
+}
+.danger-btn:hover { background:rgba(255,50,50,.18); border-color:#ff4444; }
+
+/* ── TOAST ── */
+#toast {
+  position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
+  background:rgba(10,10,5,.95); border:1px solid #cc8800;
+  border-radius:12px; padding:12px 24px;
+  font-weight:700; color:#ffcc44; font-size:.95em;
+  transition:transform .3s ease; z-index:200; pointer-events:none;
+}
+#toast.show { transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back-btn" href="index.html">◀ Back</a>
+  <h1>⚙️ Settings</h1>
+  <button class="apply-btn" onclick="saveSettings()">💾 Save</button>
+</header>
+
+<main>
+
+  <!-- GAMEPLAY -->
+  <div class="section">
+    <div class="section-header">🎮 Gameplay</div>
+
+    <!-- Difficulty -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">AI Difficulty</div>
+        <div class="setting-desc">How smart the opponent plays. Hard AI goes for lethal and manages board efficiently.</div>
+      </div>
+      <div class="segment seg-diff" id="diff-seg">
+        <button class="seg-btn" data-val="easy"   onclick="setSegment('diff',this)">Easy</button>
+        <button class="seg-btn" data-val="normal" onclick="setSegment('diff',this)">Normal</button>
+        <button class="seg-btn" data-val="hard"   onclick="setSegment('diff',this)">Hard</button>
+      </div>
+    </div>
+
+    <!-- Starting Hand -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Starting Hand Size</div>
+        <div class="setting-desc">How many cards you draw at the start of the game. Default is 4.</div>
+      </div>
+      <div class="slider-wrap">
+        <input class="setting-slider" id="hand-size" type="range" min="3" max="6" step="1" oninput="updateSlider(this,'hand-val')">
+        <span class="slider-val" id="hand-val">4</span>
+      </div>
+    </div>
+
+    <!-- Max Field -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Max Field Size</div>
+        <div class="setting-desc">Maximum minions allowed on each side. Default is 5.</div>
+      </div>
+      <div class="slider-wrap">
+        <input class="setting-slider" id="field-size" type="range" min="3" max="7" step="1" oninput="updateSlider(this,'field-val')">
+        <span class="slider-val" id="field-val">5</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISUAL -->
+  <div class="section">
+    <div class="section-header">🎨 Visual</div>
+
+    <!-- Animation speed -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Animation Speed</div>
+        <div class="setting-desc">Controls how fast AI actions and combat animations play out.</div>
+      </div>
+      <div class="segment seg-speed" id="speed-seg">
+        <button class="seg-btn" data-val="fast"   onclick="setSegment('speed',this)">Fast</button>
+        <button class="seg-btn" data-val="normal" onclick="setSegment('speed',this)">Normal</button>
+        <button class="seg-btn" data-val="slow"   onclick="setSegment('speed',this)">Slow</button>
+      </div>
+    </div>
+
+    <!-- Show tooltips -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Card Tooltips</div>
+        <div class="setting-desc">Show detailed card info popup on hover.</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="tooltip-lbl">ON</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-tooltip" onchange="updateToggleLabel(this,'tooltip-lbl')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Card back -->
+    <div class="setting-row" style="flex-wrap:wrap;gap:10px;">
+      <div class="setting-info">
+        <div class="setting-name">Card Back Style</div>
+        <div class="setting-desc">The design shown on face-down cards in the opponent's hand.</div>
+      </div>
+    </div>
+    <div class="card-backs" id="card-backs">
+      <div class="card-back-opt" data-back="classic"  onclick="selectBack(this)" title="Classic">🂠</div>
+      <div class="card-back-opt" data-back="fire"     onclick="selectBack(this)" title="Fire">🔥</div>
+      <div class="card-back-opt" data-back="galaxy"   onclick="selectBack(this)" title="Galaxy">🌌</div>
+      <div class="card-back-opt" data-back="doge"     onclick="selectBack(this)" title="Doge">🐕</div>
+      <div class="card-back-opt" data-back="money"    onclick="selectBack(this)" title="Money">💰</div>
+      <div class="card-back-opt" data-back="skull"    onclick="selectBack(this)" title="Skull">💀</div>
+    </div>
+  </div>
+
+  <!-- AUDIO -->
+  <div class="section">
+    <div class="section-header">🔊 Audio</div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Sound Effects</div>
+        <div class="setting-desc">Attack, card play, and death sound effects.</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="sfx-lbl">ON</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-sfx" onchange="updateToggleLabel(this,'sfx-lbl')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Background Music</div>
+        <div class="setting-desc">Ambient music during gameplay.</div>
+      </div>
+      <div class="toggle-wrap">
+        <span class="toggle-label" id="music-lbl">OFF</span>
+        <label class="toggle">
+          <input type="checkbox" id="toggle-music" onchange="updateToggleLabel(this,'music-lbl')">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Volume -->
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Master Volume</div>
+        <div class="setting-desc">Overall volume for all audio in the game.</div>
+      </div>
+      <div class="slider-wrap">
+        <input class="setting-slider" id="volume" type="range" min="0" max="100" step="5" oninput="updateSlider(this,'vol-val')">
+        <span class="slider-val" id="vol-val">80</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT -->
+  <div class="section">
+    <div class="section-header">ℹ️ About</div>
+    <div class="setting-row">
+      <div class="setting-info">
+        <div class="setting-name">Meme Legends: Card Battle</div>
+        <div class="setting-desc">Version 1.0.0 · 25 unique meme cards · Single player vs AI</div>
+      </div>
+    </div>
+    <div class="danger-row">
+      <button class="danger-btn" onclick="confirmResetAll()">🗑️ Reset All Data</button>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast">⚙️ Settings saved!</div>
+
+<script>
+// ── STATE ──
+let settings = {
+  diff:      'normal',
+  speed:     'normal',
+  handSize:  4,
+  fieldSize: 5,
+  tooltip:   true,
+  sfx:       true,
+  music:     false,
+  volume:    80,
+  cardBack:  'classic'
+};
+
+// ── LOAD ──
+function loadSettings() {
+  const saved = localStorage.getItem('ml_settings');
+  if(saved) {
+    try { Object.assign(settings, JSON.parse(saved)); } catch(e){}
+  }
+
+  // Difficulty segment
+  activateSegment('diff', settings.diff);
+  activateSegment('speed', settings.speed);
+
+  // Sliders
+  setSlider('hand-size',  settings.handSize,  'hand-val');
+  setSlider('field-size', settings.fieldSize, 'field-val');
+  setSlider('volume',     settings.volume,    'vol-val');
+
+  // Toggles
+  setToggle('toggle-tooltip', settings.tooltip, 'tooltip-lbl');
+  setToggle('toggle-sfx',     settings.sfx,     'sfx-lbl');
+  setToggle('toggle-music',   settings.music,   'music-lbl');
+
+  // Card back
+  document.querySelectorAll('.card-back-opt').forEach(el => {
+    el.classList.toggle('selected', el.dataset.back === settings.cardBack);
+  });
+}
+
+// ── SEGMENT CONTROLS ──
+function setSegment(key, btn) {
+  settings[key] = btn.dataset.val;
+  activateSegment(key, btn.dataset.val);
+}
+function activateSegment(key, val) {
+  const seg = document.getElementById(key+'-seg');
+  if(!seg) return;
+  seg.querySelectorAll('.seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === val);
+  });
+}
+
+// ── SLIDERS ──
+function setSlider(id, val, labelId) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.value = val;
+  updateSlider(el, labelId);
+}
+function updateSlider(el, labelId) {
+  const min = parseFloat(el.min), max = parseFloat(el.max), val = parseFloat(el.value);
+  const pct = ((val-min)/(max-min)*100).toFixed(1);
+  el.style.setProperty('--pct', pct+'%');
+  document.getElementById(labelId).textContent = val;
+  // sync to settings
+  if(el.id==='hand-size')  settings.handSize  = val;
+  if(el.id==='field-size') settings.fieldSize = val;
+  if(el.id==='volume')     settings.volume    = val;
+}
+
+// ── TOGGLES ──
+function setToggle(id, val, labelId) {
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.checked = val;
+  document.getElementById(labelId).textContent = val ? 'ON' : 'OFF';
+}
+function updateToggleLabel(el, labelId) {
+  document.getElementById(labelId).textContent = el.checked ? 'ON' : 'OFF';
+  if(el.id==='toggle-tooltip') settings.tooltip = el.checked;
+  if(el.id==='toggle-sfx')     settings.sfx     = el.checked;
+  if(el.id==='toggle-music')   settings.music   = el.checked;
+}
+
+// ── CARD BACKS ──
+function selectBack(el) {
+  settings.cardBack = el.dataset.back;
+  document.querySelectorAll('.card-back-opt').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ── SAVE ──
+function saveSettings() {
+  // Capture current toggle states
+  settings.tooltip = document.getElementById('toggle-tooltip').checked;
+  settings.sfx     = document.getElementById('toggle-sfx').checked;
+  settings.music   = document.getElementById('toggle-music').checked;
+
+  localStorage.setItem('ml_settings', JSON.stringify(settings));
+  showToast('⚙️ Settings saved!');
+}
+
+// ── RESET ALL ──
+function confirmResetAll() {
+  if(!confirm('Reset ALL game data including stats, profile, and settings?')) return;
+  localStorage.clear();
+  showToast('🗑️ All data cleared. Reloading…');
+  setTimeout(()=>location.reload(), 1500);
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ── INIT ──
+loadSettings();
+</script>
+</body>
+</html>
