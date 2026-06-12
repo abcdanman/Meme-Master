@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meme Legends: VS Friend</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Exo+2:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --felt: #1a3a1a;
+  --felt2: #0e2010;
+  --gold: #c8960c;
+  --border: rgba(200,150,12,0.4);
+}
+
+body {
+  font-family:'Exo 2',sans-serif;
+  background: radial-gradient(ellipse at 50% 0%, #1a3a1a 0%, #0a180a 60%, #060c06 100%);
+  min-height:100vh;
+  color:#fff;
+  overflow:hidden;
+  user-select:none;
+}
+
+/* ── BOARD ── */
+#board {
+  display:grid;
+  grid-template-rows: 90px 42px 150px 56px 150px 42px 190px;
+  height:100vh;
+  width:100vw;
+  padding:6px 12px;
+  gap:0;
+}
+
+/* ── OPPONENT HAND (face down) ── */
+#ai-hand {
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:4px;
+  padding:4px 0;
+}
+.ai-card-back {
+  width:52px; height:72px;
+  border-radius:7px;
+  background:linear-gradient(135deg,#1a1a4a,#0a0a2a);
+  border:2px solid #3a3a7a;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.4em; color:#3a3a7a;
+  box-shadow:0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* ── INFO BARS ── */
+.info-bar {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:2px 8px;
+}
+.hero-wrap { position:relative; }
+.hero-portrait {
+  width:50px; height:50px;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.6em;
+  border:3px solid;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.hero-portrait:hover { transform:scale(1.08); }
+.hero-portrait.player-hero { background:radial-gradient(#1a4a8a,#061830); border-color:#4a8aff; box-shadow:0 0 12px rgba(74,138,255,.4); }
+.hero-portrait.ai-hero    { background:radial-gradient(#8a1a5a,#300820); border-color:#ff55aa; box-shadow:0 0 12px rgba(255,85,170,.4); }
+.hero-hp {
+  position:absolute; bottom:-4px; left:50%; transform:translateX(-50%);
+  background:#0a200a; color:#44ff88; font-weight:800; font-size:.65em;
+  padding:1px 7px; border-radius:8px; border:1.5px solid #44ff88;
+  white-space:nowrap;
+}
+
+.mana-row { display:flex; gap:3px; align-items:center; flex-wrap:wrap; max-width:160px; }
+.crystal {
+  width:16px; height:16px; border-radius:50%;
+  border:1.5px solid #4a4aff; transition:all .2s;
+}
+.crystal.full  { background:radial-gradient(#7777ff,#2222aa); box-shadow:0 0 4px #4444ff; }
+.crystal.empty { background:#12122a; }
+.mana-label { color:#8888ff; font-size:.7em; font-weight:600; margin-left:3px; }
+
+.deck-pill {
+  background:linear-gradient(135deg,#1a1a3a,#0a0a2a);
+  border:1.5px solid #3a3a7a; border-radius:8px;
+  padding:3px 10px; font-size:.7em; color:#6666cc;
+  display:flex; align-items:center; gap:5px;
+}
+
+.ai-bar { justify-content:flex-end; flex-direction:row-reverse; }
+
+/* ── BATTLEFIELD ── */
+.battlefield {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:6px;
+  border:1.5px dashed rgba(255,255,255,0.08);
+  border-radius:12px;
+  background:rgba(0,0,0,0.15);
+  position:relative;
+  min-height:148px;
+}
+.field-label {
+  position:absolute; left:8px; top:50%; transform:translateY(-50%);
+  font-size:.6em; color:rgba(255,255,255,0.15); text-transform:uppercase;
+  letter-spacing:2px; writing-mode:vertical-rl;
+}
+
+/* ── MIDDLE BAR ── */
+#middle-bar {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  padding:4px 12px;
+  background:rgba(0,0,0,0.3);
+  border-top:1px solid rgba(255,255,255,0.06);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+#turn-indicator {
+  font-size:.75em; color:#aaa; text-transform:uppercase; letter-spacing:2px;
+  min-width:160px; text-align:center;
+}
+#end-turn-btn {
+  background:linear-gradient(135deg,#1a5a1a,#0a3a0a);
+  color:#44ff88; border:2px solid #44aa66;
+  padding:7px 20px; font-size:.85em;
+  font-family:'Exo 2',sans-serif; font-weight:700;
+  border-radius:20px; cursor:pointer;
+  transition:all .2s; text-transform:uppercase; letter-spacing:1px;
+}
+#end-turn-btn:hover:not(:disabled) { background:linear-gradient(135deg,#2a7a2a,#1a5a1a); box-shadow:0 0 12px rgba(68,255,136,.4); }
+#end-turn-btn:disabled { opacity:.4; cursor:not-allowed; }
+#log {
+  background:rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; padding:5px 8px; width:240px;
+  height:46px; overflow-y:auto; font-size:.68em;
+  scrollbar-width:thin; scrollbar-color:#333 transparent;
+}
+.le { color:#bbb; padding:1px 0; border-bottom:1px solid rgba(255,255,255,0.04); }
+.le.dmg { color:#ff8888; }
+.le.heal { color:#88ff99; }
+.le.ev  { color:#ffdd77; }
+.le.die { color:#ff4444; font-weight:700; }
+
+/* ── CARDS ── */
+.card {
+  width:104px; height:148px;
+  border-radius:9px;
+  position:relative; flex-shrink:0;
+  cursor:pointer;
+  transition:transform .15s, box-shadow .15s;
+}
+.card:hover:not(.exhausted) { transform:translateY(-6px) scale(1.04); }
+
+.card.selected   { box-shadow:0 0 22px 6px #ffee00 !important; transform:translateY(-12px) scale(1.06) !important; }
+.card.can-atk    { box-shadow:0 0 14px 3px #ff7700; animation:pulse-atk 1.2s ease-in-out infinite; }
+.card.targetable { box-shadow:0 0 14px 3px #ff2222; cursor:crosshair; }
+.card.exhausted  { opacity:.55; filter:grayscale(40%); }
+
+@keyframes pulse-atk {
+  0%,100% { box-shadow:0 0 8px 2px #ff7700; }
+  50%      { box-shadow:0 0 20px 6px #ff9900; }
+}
+@keyframes shake {
+  0%,100% { transform:translateX(0); }
+  20%,60% { transform:translateX(-5px); }
+  40%,80% { transform:translateX(5px); }
+}
+@keyframes pop-in {
+  from { transform:scale(.4) translateY(-30px); opacity:0; }
+  to   { transform:scale(1) translateY(0); opacity:1; }
+}
+@keyframes death-out {
+  0%   { transform:scale(1); opacity:1; }
+  50%  { transform:scale(1.2) rotate(10deg); filter:brightness(2); }
+  100% { transform:scale(0) rotate(25deg); opacity:0; }
+}
+.card.playing { animation:pop-in .3s ease-out; }
+.card.dying   { animation:death-out .4s ease-in forwards; pointer-events:none; }
+.card.shaking { animation:shake .3s ease; }
+
+.card-inner {
+  width:100%; height:100%;
+  border-radius:9px;
+  border:2.5px solid;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  position:relative;
+  box-shadow:inset 0 0 20px rgba(0,0,0,0.4);
+}
+
+.cost-badge {
+  position:absolute; top:-7px; left:-7px;
+  width:26px; height:26px; border-radius:50%;
+  background:radial-gradient(#5555ff,#1a1a88);
+  border:2px solid #8888ff;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:800; font-size:.85em; z-index:10;
+}
+
+.c-name {
+  background:rgba(0,0,0,0.75);
+  font-size:.54em; font-weight:700;
+  text-align:center; padding:3px 2px;
+  text-transform:uppercase; letter-spacing:.5px;
+  flex-shrink:0;
+}
+.c-art {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  font-size:2.8em; flex-direction:column; gap:0; line-height:1;
+  position:relative;
+  background:rgba(0,0,0,0.2);
+  overflow:hidden;
+}
+.c-art img {
+  width:100%; height:100%;
+  object-fit:cover; object-position:center top;
+  display:block;
+}
+.c-art .art-emoji { filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+.c-ability {
+  background:rgba(0,0,0,0.82);
+  font-size:.46em; text-align:center;
+  padding:3px 4px; min-height:30px; line-height:1.25;
+  color:#ddd; flex-shrink:0;
+}
+.c-stats {
+  display:flex; justify-content:space-between; padding:3px 6px;
+  background:rgba(0,0,0,0.9); flex-shrink:0;
+}
+.c-atk { color:#ff7777; font-weight:800; font-size:.88em; }
+.c-hp  { font-weight:800; font-size:.88em; }
+
+.hp-track {
+  position:absolute; bottom:0; left:0; right:0; height:3px; background:#1a0a0a;
+}
+.hp-fill { height:100%; transition:width .3s; border-radius:0 2px 2px 0; }
+
+.status-row {
+  position:absolute; top:18px; right:2px;
+  display:flex; flex-direction:column; gap:1px;
+}
+.sbadge { font-size:.65em; }
+
+.kwrap { display:flex; flex-wrap:wrap; justify-content:center; gap:1px; margin-bottom:1px; }
+.kw {
+  font-size:.42em; padding:1px 4px; border-radius:3px;
+  font-weight:700; text-transform:uppercase;
+}
+.kw-taunt   { background:#5a2800; color:#ffaa44; }
+.kw-rush    { background:#00285a; color:#44aaff; }
+.kw-lifelink{ background:#00320a; color:#44ff88; }
+.kw-dodge   { background:#2a0050; color:#cc88ff; }
+.kw-evolve  { background:#003028; color:#44ffdd; }
+
+/* rarity borders */
+.r-common    { border-color:#777; }
+.r-rare      { border-color:#4488ff; box-shadow:0 0 6px rgba(68,136,255,.3); }
+.r-epic      { border-color:#aa44ff; box-shadow:0 0 8px rgba(170,68,255,.4); }
+.r-legendary { border-color:#ff9900; box-shadow:0 0 14px rgba(255,153,0,.5); animation:legend-glow 2s ease-in-out infinite; }
+@keyframes legend-glow {
+  0%,100% { box-shadow:0 0 10px rgba(255,153,0,.4); }
+  50%      { box-shadow:0 0 22px rgba(255,200,0,.7); }
+}
+
+/* ── PLAYER HAND ── */
+#player-hand {
+  display:flex; justify-content:center; align-items:flex-end;
+  gap:6px; padding:8px 4px 4px;
+  overflow-x:auto; overflow-y:visible;
+}
+#player-hand .card:hover:not(.exhausted) { transform:translateY(-22px) scale(1.08); }
+#player-hand .card.unaffordable { opacity:.45; filter:grayscale(50%); }
+
+/* ── VS BADGE ── */
+#vs-badge {
+  position:fixed; top:8px; left:50%; transform:translateX(-50%);
+  background:rgba(0,0,0,0.7); border:1px solid rgba(255,68,102,0.4);
+  border-radius:20px; padding:3px 14px;
+  font-size:.65em; color:#ff6699; letter-spacing:2px; z-index:10;
+  pointer-events:none;
+}
+
+/* ── FLOATING DAMAGE ── */
+.dmg-float {
+  position:fixed; pointer-events:none; z-index:999;
+  font-weight:900; text-shadow:2px 2px 4px rgba(0,0,0,.8);
+  animation:float-dmg .9s ease-out forwards;
+}
+@keyframes float-dmg {
+  0%   { transform:translateY(0) scale(1); opacity:1; }
+  100% { transform:translateY(-55px) scale(1.3); opacity:0; }
+}
+
+/* ── SETUP MODAL ── */
+#setup-modal {
+  display:flex; position:fixed; inset:0;
+  background:rgba(0,0,0,0.97); z-index:700;
+  align-items:center; justify-content:center;
+  padding:12px;
+}
+.setup-box {
+  background:linear-gradient(160deg,#12122a,#080812);
+  border:2px solid rgba(255,68,102,0.35);
+  border-radius:22px;
+  padding:28px 30px;
+  max-width:560px; width:100%;
+  max-height:92vh; overflow-y:auto;
+  box-shadow:0 0 50px rgba(255,68,102,0.15);
+}
+.setup-title {
+  font-family:'Cinzel',serif;
+  font-size:1.7em; color:#ff6699;
+  text-align:center; margin-bottom:6px;
+  filter:drop-shadow(0 0 10px rgba(255,68,102,0.4));
+}
+.setup-subtitle { text-align:center; color:#666; font-size:.75em; letter-spacing:2px; margin-bottom:20px; }
+.player-section {
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.09);
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:14px;
+}
+.ps-tag {
+  font-size:.62em; color:#888; text-transform:uppercase;
+  letter-spacing:2.5px; margin-bottom:8px; display:block;
+}
+.p1-row { display:flex; align-items:center; gap:12px; }
+.p1-avatar {
+  width:44px; height:44px; border-radius:50%;
+  object-fit:cover; border:2px solid #4a8aff;
+  box-shadow:0 0 10px rgba(74,138,255,.3);
+  flex-shrink:0;
+}
+.p1-name { font-weight:700; font-size:1em; }
+.p1-hint { font-size:.65em; color:#555; margin-top:2px; }
+.p2-name-input {
+  width:100%; padding:10px 14px;
+  background:rgba(255,255,255,0.06);
+  border:1.5px solid rgba(255,255,255,0.12);
+  border-radius:10px; color:#fff;
+  font-family:'Exo 2',sans-serif; font-size:.95em;
+  outline:none; margin-bottom:12px; display:block;
+  transition:border-color .2s;
+}
+.p2-name-input:focus { border-color:#ff6699; }
+.av-label { font-size:.68em; color:#666; margin-bottom:8px; display:block; }
+.avatar-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,46px);
+  gap:6px; max-height:156px; overflow-y:auto;
+  padding-right:4px;
+}
+.avatar-grid::-webkit-scrollbar { width:3px; }
+.avatar-grid::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+.av-opt {
+  width:46px; height:46px; border-radius:50%;
+  object-fit:cover; cursor:pointer;
+  border:2.5px solid transparent;
+  transition:all .15s;
+  filter:brightness(0.65);
+}
+.av-opt:hover { filter:brightness(1); transform:scale(1.1); }
+.av-opt.selected {
+  border-color:#ff6699;
+  filter:brightness(1);
+  box-shadow:0 0 10px rgba(255,100,150,.5);
+}
+.battle-btn {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,#5a0028,#2a0012);
+  color:#ff6699; border:2px solid #ff4466;
+  border-radius:14px; font-size:1.1em; font-weight:700;
+  font-family:'Exo 2',sans-serif; cursor:pointer;
+  transition:all .2s; margin-top:8px;
+  text-transform:uppercase; letter-spacing:1.5px;
+}
+.battle-btn:hover { box-shadow:0 0 28px rgba(255,68,102,.5); transform:scale(1.02); }
+.back-link {
+  display:block; text-align:center; margin-top:12px;
+  color:#444; font-size:.75em; cursor:pointer;
+  text-decoration:none; transition:color .2s;
+}
+.back-link:hover { color:#888; }
+
+/* ── PASS OVERLAY ── */
+#pass-overlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.97); z-index:650;
+  align-items:center; justify-content:center;
+}
+.pass-box {
+  text-align:center;
+  background:linear-gradient(160deg,#0a1a0a,#040c04);
+  border:2px solid rgba(68,200,100,0.35);
+  border-radius:24px;
+  padding:40px 50px;
+  max-width:420px; width:90%;
+  box-shadow:0 0 50px rgba(68,200,100,0.1);
+}
+.pass-icon { font-size:3.5em; display:block; margin-bottom:10px; }
+.pass-title {
+  font-family:'Cinzel',serif;
+  font-size:1.5em; color:#44dd66;
+  margin-bottom:12px;
+}
+.pass-to {
+  font-size:1.4em; font-weight:700; color:#fff;
+  margin-bottom:6px;
+}
+.pass-desc { color:#666; font-size:.82em; margin-bottom:4px; }
+.pass-from { color:#444; font-size:.72em; margin-bottom:28px; }
+.ready-btn {
+  background:linear-gradient(135deg,#1a5a1a,#0a3a0a);
+  color:#44ff88; border:2px solid #44aa66;
+  padding:14px 38px; font-size:1em; font-weight:700;
+  font-family:'Exo 2',sans-serif; border-radius:24px;
+  cursor:pointer; transition:all .2s;
+  text-transform:uppercase; letter-spacing:1.5px;
+  display:block; margin:0 auto;
+}
+.ready-btn:hover { box-shadow:0 0 28px rgba(68,255,136,.5); transform:scale(1.06); }
+
+/* ── GAME OVER ── */
+#game-over {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,0.88); z-index:500;
+  flex-direction:column; align-items:center; justify-content:center; gap:20px;
+}
+#game-over.show { display:flex; }
+#game-over h1 {
+  font-family:'Cinzel',serif; font-size:3.2em;
+  text-shadow:0 0 30px currentColor; animation:pop-in .5s ease-out;
+  text-align:center; max-width:500px; line-height:1.1;
+}
+#game-over.win  h1 { color:#ffdd00; }
+#game-over p { font-size:1em; color:#aaa; text-align:center; max-width:400px; }
+.go-btns { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.go-btn {
+  padding:12px 28px; font-size:1em;
+  border-radius:24px; cursor:pointer;
+  font-family:'Exo 2',sans-serif; font-weight:700;
+  transition:all .2s; border:2px solid;
+}
+.go-btn-play { background:linear-gradient(135deg,#3a1a6a,#1a0a3a); color:#cc88ff; border-color:#8844ff; }
+.go-btn-play:hover { box-shadow:0 0 25px rgba(136,68,255,.7); transform:scale(1.05); }
+.go-btn-menu { background:linear-gradient(135deg,#1a1a3a,#0a0a1a); color:#aaaaff; border-color:#4444aa; }
+.go-btn-menu:hover { box-shadow:0 0 20px rgba(68,68,255,.5); transform:scale(1.03); }
+
+/* ── TOOLTIP ── */
+#tooltip {
+  display:none; position:fixed; z-index:400;
+  pointer-events:none; width:200px;
+  background:rgba(10,10,20,0.97); border:1px solid rgba(255,255,255,.2);
+  border-radius:10px; padding:10px; font-size:.75em; color:#ddd;
+  line-height:1.5;
+}
+#tooltip .tt-name { font-weight:800; font-size:1.1em; color:#fff; margin-bottom:4px; }
+#tooltip .tt-flavor { color:#888; font-style:italic; margin-top:6px; font-size:.9em; }
+
+/* ── SCROLLBARS ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- VS Badge -->
+<div id="vs-badge">👥 VS FRIEND — HOT SEAT</div>
+
+<div id="board">
+  <!-- Opponent Hand (face down) -->
+  <div id="ai-hand"></div>
+
+  <!-- Opponent Info Bar -->
+  <div class="info-bar ai-bar" id="ai-info">
+    <div class="hero-wrap">
+      <div class="hero-portrait ai-hero" id="ai-hero">😈</div>
+      <div class="hero-hp" id="ai-hp">30</div>
+    </div>
+    <div class="mana-row" id="ai-mana"></div>
+    <div class="deck-pill">🂠 <span id="ai-deck">20</span></div>
+    <div id="ai-name-label" style="font-size:.72em;color:#ff88aa;font-weight:700;"></div>
+  </div>
+
+  <!-- Opponent Battlefield -->
+  <div class="battlefield" id="ai-field">
+    <span class="field-label">Opponent Field</span>
+  </div>
+
+  <!-- Middle Bar -->
+  <div id="middle-bar">
+    <div id="log"></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px;">
+      <div id="turn-indicator">⚔️ Your Turn</div>
+      <button id="end-turn-btn">End Turn</button>
+    </div>
+    <div style="font-size:.68em;color:#666;line-height:1.7;text-align:right;">
+      <div>🖱️ Click hand card → plays it</div>
+      <div>🎯 Click your field card → attacker</div>
+      <div>💥 Click enemy/hero → attack</div>
+    </div>
+  </div>
+
+  <!-- Player Battlefield -->
+  <div class="battlefield" id="player-field">
+    <span class="field-label">Your Field</span>
+  </div>
+
+  <!-- Player Info Bar -->
+  <div class="info-bar" id="player-info">
+    <div class="hero-wrap">
+      <div class="hero-portrait player-hero" id="player-hero">🧙</div>
+      <div class="hero-hp" id="player-hp">30</div>
+    </div>
+    <div class="mana-row" id="player-mana"></div>
+    <div class="deck-pill">🂠 <span id="player-deck">20</span></div>
+    <div id="player-name-label" style="font-size:.72em;color:#88aaff;font-weight:700;"></div>
+  </div>
+
+  <!-- Player Hand -->
+  <div id="player-hand"></div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip">
+  <div class="tt-name" id="tt-name"></div>
+  <div id="tt-body"></div>
+  <div class="tt-flavor" id="tt-flavor"></div>
+</div>
+
+<!-- Game Over -->
+<div id="game-over">
+  <h1 id="go-title"></h1>
+  <p id="go-sub"></p>
+  <div class="go-btns">
+    <button class="go-btn go-btn-play" onclick="showSetup()">🔄 Play Again</button>
+    <button class="go-btn go-btn-menu" onclick="window.location.href='index.html'">🏠 Main Menu</button>
+  </div>
+</div>
+
+<!-- Setup Modal -->
+<div id="setup-modal">
+  <div class="setup-box">
+    <div class="setup-title">👥 VS FRIEND</div>
+    <div class="setup-subtitle">HOT SEAT · 2 PLAYERS · 1 SCREEN</div>
+
+    <!-- Player 1 -->
+    <div class="player-section">
+      <span class="ps-tag">Player 1 (You)</span>
+      <div class="p1-row">
+        <img id="p1-avatar-img" class="p1-avatar" src="" alt="P1" onerror="this.style.display='none'">
+        <div>
+          <div class="p1-name" id="p1-name-display">Loading...</div>
+          <div class="p1-hint">From your profile · <a href="profile.html" style="color:#4a8aff;text-decoration:none;">Edit ↗</a></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Player 2 -->
+    <div class="player-section">
+      <span class="ps-tag">Player 2 (Friend)</span>
+      <input type="text" id="p2-name-input" class="p2-name-input" placeholder="Enter friend's name..." maxlength="20">
+      <span class="av-label">Pick an avatar:</span>
+      <div class="avatar-grid" id="p2-avatar-grid"></div>
+    </div>
+
+    <button class="battle-btn" onclick="startGame()">⚔️ START BATTLE!</button>
+    <a class="back-link" href="index.html">← Back to Menu</a>
+  </div>
+</div>
+
+<!-- Pass Overlay -->
+<div id="pass-overlay">
+  <div class="pass-box">
+    <span class="pass-icon">🙈</span>
+    <div class="pass-title">PASS THE DEVICE</div>
+    <div class="pass-to" id="pass-to-name"></div>
+    <div class="pass-desc">it's your turn! Don't look at the screen</div>
+    <div class="pass-from" id="pass-from-msg"></div>
+    <button class="ready-btn" onclick="readyToPlay()">👀 I'm Ready!</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+// CARD DEFINITIONS
+// ═══════════════════════════════════════════
+const CARDS = [
+  {
+    id:'doge', name:'Doge',
+    img:'https://i.kym-cdn.com/photos/images/original/000/581/296/c09.jpg',
+    art:'🐕', cost:2, atk:2, hp:3, rarity:'rare',
+    bg:'linear-gradient(160deg,#7a5c00,#3a2a00)',
+    kw:['dodge'],
+    ability:'Much Dodge: 30% chance to evade attacks.',
+    flavor:'Such power. Very meme. Wow.',
+    passive:{type:'dodge', chance:.30}
+  },
+  {
+    id:'fire_dog', name:'This Is Fine',
+    img:'https://i.imgflip.com/wxica.jpg',
+    art:'🐕🔥', cost:3, atk:1, hp:8, rarity:'rare',
+    bg:'linear-gradient(160deg,#8a2200,#3a0a00)',
+    kw:['taunt'],
+    ability:'🛡️ Taunt. Burn immune.',
+    flavor:'The house is on fire but that\'s okay.',
+    passive:{type:'burn_immune'}
+  },
+  {
+    id:'grumpy_cat', name:'Grumpy Cat',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/011/365/GRUMPYCAT.jpg',
+    art:'😾', cost:2, atk:3, hp:2, rarity:'common',
+    bg:'linear-gradient(160deg,#3a3a5a,#1a1a3a)',
+    kw:[],
+    ability:'✨ Battlecry: Silence a random enemy minion.',
+    flavor:'No.',
+    battlecry:{type:'silence'}
+  },
+  {
+    id:'trollface', name:'Trollface',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/000/091/TrollFace.jpg',
+    art:'😈', cost:3, atk:3, hp:3, rarity:'rare',
+    bg:'linear-gradient(160deg,#0a4a0a,#021002)',
+    kw:[],
+    ability:'↩️ Passive: Reflects 8 dmg to attacker when hit.',
+    flavor:'Problem? U mad?',
+    passive:{type:'reflect', amt:8}
+  },
+  {
+    id:'drake', name:'Drake',
+    img:'https://i.imgflip.com/30b1gx.jpg',
+    art:'🎤', cost:3, atk:3, hp:4, rarity:'rare',
+    bg:'linear-gradient(160deg,#0a0a5a,#020212)',
+    kw:['rush'],
+    ability:'⚡ Rush. First attack deals double damage.',
+    flavor:'Nah. ↑  Yeah. ↑',
+    passive:{type:'first_atk_double', used:false}
+  },
+  {
+    id:'distracted_bf', name:'Distracted BF',
+    img:'https://i.imgflip.com/1ur9b0.jpg',
+    art:'👀', cost:2, atk:3, hp:2, rarity:'common',
+    bg:'linear-gradient(160deg,#7a3800,#3a1800)',
+    kw:[],
+    ability:'🃏 Battlecry: Draw a card.',
+    flavor:'Eyes on something more interesting.',
+    battlecry:{type:'draw',n:1}
+  },
+  {
+    id:'surprised_pika', name:'Surprised Pikachu',
+    img:'https://i.imgflip.com/2kbn1e.jpg',
+    art:'⚡😮', cost:1, atk:2, hp:1, rarity:'common',
+    bg:'linear-gradient(160deg,#8a7800,#3a3200)',
+    kw:[],
+    ability:'⚡ Battlecry: Deal 2 damage to enemy hero.',
+    flavor:'WAIT — WHAT DID YOU JUST—  O_O',
+    battlecry:{type:'zap_hero', amt:2}
+  },
+  {
+    id:'woman_cat', name:'Woman Yelling',
+    img:'https://i.imgflip.com/345v97.jpg',
+    art:'😤🍽️', cost:4, atk:4, hp:4, rarity:'epic',
+    bg:'linear-gradient(160deg,#6a006a,#2a002a)',
+    kw:[],
+    ability:'😡 Enrage: Gains +4 ATK when first damaged.',
+    flavor:'I AM NOT YELLING!',
+    passive:{type:'enrage', bonus:4, used:false}
+  },
+  {
+    id:'pepe', name:'Pepe the Frog',
+    img:'https://i.kym-cdn.com/entries/icons/original/000/000/142/feelsgoodman.png',
+    art:'🐸', cost:3, atk:2, hp:5, rarity:'epic',
+    bg:'linear-gradient(160deg,#005a10,#001a04)',
+    kw:['lifelink'],
+    ability:'💚 Lifelink: Heals you for damage dealt.',
+    flavor:'Feels good man.',
+    passive:{type:'lifelink'}
+  },
+  {
+    id:'chad', name:'Gigachad',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/026/152/gigachadd.jpg',
+    art:'💪', cost:6, atk:7, hp:6, rarity:'legendary',
+    bg:'linear-gradient(160deg,#7a4400,#3a1a00)',
+    kw:['taunt'],
+    ability:'🛡️ Taunt. Immune to silence and debuffs.',
+    flavor:'Yes.',
+    passive:{type:'debuff_immune'}
+  },
+  {
+    id:'galaxy_brain', name:'Galaxy Brain',
+    img:'https://i.imgflip.com/1jwhww.jpg',
+    art:'🧠✨', cost:4, atk:2, hp:3, rarity:'epic',
+    bg:'linear-gradient(160deg,#000a3a,#000008)',
+    kw:[],
+    ability:'🎯 Battlecry: Deal 5 damage to biggest enemy threat.',
+    flavor:'5D chess.',
+    battlecry:{type:'snipe', amt:5}
+  },
+  {
+    id:'harold', name:'Hide The Pain Harold',
+    img:'https://i.imgflip.com/gk5el.jpg',
+    art:'😬', cost:3, atk:1, hp:6, rarity:'rare',
+    bg:'linear-gradient(160deg,#4a3a2a,#1a1008)',
+    kw:[],
+    ability:'💣 Burst: Stores damage taken, releases on turn 3.',
+    flavor:"It's fine, really.",
+    passive:{type:'burst', stored:0, turn:0}
+  },
+  {
+    id:'minion', name:"Gru's Minion",
+    img:'https://i.imgflip.com/26jxvz.jpg',
+    art:'🟡', cost:1, atk:1, hp:2, rarity:'common',
+    bg:'linear-gradient(160deg,#7a7a00,#3a3a00)',
+    kw:[],
+    ability:'👥 +1 ATK for each other Minion you control.',
+    flavor:'Bello!',
+    passive:{type:'gang_up'}
+  },
+  {
+    id:'salt_bae', name:'Salt Bae',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/021/971/Salt-Bae-001.jpg',
+    art:'🧂', cost:4, atk:3, hp:4, rarity:'epic',
+    bg:'linear-gradient(160deg,#5a1a00,#200800)',
+    kw:[],
+    ability:'🔥 Battlecry: Apply Burn (3 dmg/turn, 2 turns) to a random enemy.',
+    flavor:'✨ Extra. Always extra.',
+    battlecry:{type:'burn', amt:3, turns:2}
+  },
+  {
+    id:'two_buttons', name:'Two Buttons Guy',
+    img:'https://i.imgflip.com/1g8my4.jpg',
+    art:'😰', cost:2, atk:2, hp:3, rarity:'common',
+    bg:'linear-gradient(160deg,#2a2a5a,#0a0a2a)',
+    kw:[],
+    ability:'🎲 Battlecry: Random effect! Could be anything.',
+    flavor:"SWEATING INTENSIFIES.",
+    battlecry:{type:'chaos'}
+  },
+  {
+    id:'expand_brain', name:'Expanding Brain',
+    img:'https://i.imgflip.com/1jwhww.jpg',
+    art:'🧠', cost:2, atk:1, hp:4, rarity:'rare',
+    bg:'linear-gradient(160deg,#001a3a,#000008)',
+    kw:['evolve'],
+    ability:'📈 Gains +2 ATK at the start of each of your turns.',
+    flavor:'Regular → Smart → Ascension',
+    passive:{type:'evolve', gain:2}
+  },
+  {
+    id:'confused_math', name:'Confused Math Lady',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/021/464/14608107_1180665285312703_1558693314_n.jpg',
+    art:'🤔📊', cost:3, atk:2, hp:3, rarity:'common',
+    bg:'linear-gradient(160deg,#4a0a4a,#1a001a)',
+    kw:[],
+    ability:'🔄 20% chance to dodge AND counter-attack.',
+    flavor:'When in doubt, make it more complex.',
+    passive:{type:'dodge_counter', chance:.20}
+  },
+  {
+    id:'baby_yoda', name:'Baby Yoda',
+    img:'https://i.kym-cdn.com/entries/icons/mobile/000/031/827/bright.jpg',
+    art:'👶🟢', cost:5, atk:3, hp:7, rarity:'legendary',
+    bg:'linear-gradient(160deg,#0a3a0a,#020e02)',
+    kw:[],
+    ability:'🌀 The Force: 25% chance to reflect attacks back.',
+    flavor:'Sipping soup. Watching chaos unfold.',
+    passive:{type:'reflect_chance', chance:.25}
+  },
+  {
+    id:'shrek', name:'Shrek',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/012/178/shrek.jpg',
+    art:'🟢👑', cost:8, atk:8, hp:10, rarity:'legendary',
+    bg:'linear-gradient(160deg,#1a4a00,#061200)',
+    kw:['taunt'],
+    ability:'🛡️ Taunt. First attack received is reduced by 5.',
+    flavor:'GET OUT OF MY SWAMP.',
+    passive:{type:'first_dmg_reduce', amt:5, used:false}
+  },
+  {
+    id:'mock_spong', name:'Mocking SpongeBob',
+    img:'https://i.imgflip.com/1otk96.jpg',
+    art:'🧽', cost:2, atk:2, hp:2, rarity:'common',
+    bg:'linear-gradient(160deg,#7a7a00,#2a2a00)',
+    kw:[],
+    ability:'🔁 Battlecry: Copy a random ATK buff from an enemy.',
+    flavor:'sO yOu ThInK yOuR cArD iS sTrOnG?',
+    battlecry:{type:'copy_buff'}
+  },
+  {
+    id:'stonks', name:'Stonks Man',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/029/959/Screen_Shot_2019-06-05_at_1.26.32_PM.jpg',
+    art:'📈', cost:4, atk:2, hp:4, rarity:'rare',
+    bg:'linear-gradient(160deg,#002a00,#000800)',
+    kw:[],
+    ability:'📈 Gains +1 ATK at the start of each of your turns.',
+    flavor:'Number go up. Always up.',
+    passive:{type:'stonks', gain:1}
+  },
+  {
+    id:'leonidas', name:'Leonidas',
+    img:'https://i.kym-cdn.com/entries/icons/facebook/000/000/026/Gerard-Butler-This-Is-Sparta.jpg',
+    art:'⚔️🛡️', cost:5, atk:5, hp:5, rarity:'epic',
+    bg:'linear-gradient(160deg,#5a2000,#1a0800)',
+    kw:['rush'],
+    ability:'⚡ Rush. Deals double ATK when below 30% HP.',
+    flavor:'TONIGHT WE DINE IN HELL!',
+    passive:{type:'last_stand', mult:2}
+  },
+  {
+    id:'uno_reverse', name:'UNO Reverse',
+    img:'https://i.imgflip.com/3lmzyx.jpg',
+    art:'🔄', cost:3, atk:0, hp:7, rarity:'epic',
+    bg:'linear-gradient(160deg,#8a0000,#2a0000)',
+    kw:['taunt'],
+    ability:'🛡️ Taunt. No U: ALL damage reflected back.',
+    flavor:'No U. Literally no U.',
+    passive:{type:'full_reflect'}
+  },
+  {
+    id:'bernie', name:'Bernie Mittens',
+    img:'https://i.imgflip.com/3oevdk.jpg',
+    art:'🧤', cost:4, atk:2, hp:5, rarity:'rare',
+    bg:'linear-gradient(160deg,#0a1a3a,#020810)',
+    kw:[],
+    ability:'💊 Battlecry: Heal all your minions AND hero for 3.',
+    flavor:'I am once again asking for your mana.',
+    battlecry:{type:'heal_all', amt:3}
+  },
+  {
+    id:'disaster_girl', name:'Disaster Girl',
+    img:'https://i.imgflip.com/23ls.jpg',
+    art:'👧🔥', cost:6, atk:5, hp:5, rarity:'legendary',
+    bg:'linear-gradient(160deg,#6a0000,#1a0000)',
+    kw:[],
+    ability:'💥 Battlecry: Deal 2 damage to ALL enemies and hero.',
+    flavor:'The smile that launched a thousand memes.',
+    battlecry:{type:'aoe', amt:2}
+  }
+];
+
+// ═══════════════════════════════════════════
+// AVATAR DATA
+// ═══════════════════════════════════════════
+const MEME_AVATARS = [
+  { id:'doge',          img:'https://i.kym-cdn.com/photos/images/original/000/581/296/c09.jpg' },
+  { id:'grumpy_cat',    img:'https://i.kym-cdn.com/entries/icons/facebook/000/011/365/GRUMPYCAT.jpg' },
+  { id:'trollface',     img:'https://i.kym-cdn.com/entries/icons/facebook/000/000/091/TrollFace.jpg' },
+  { id:'pepe',          img:'https://i.kym-cdn.com/entries/icons/original/000/000/142/feelsgoodman.png' },
+  { id:'chad',          img:'https://i.kym-cdn.com/entries/icons/facebook/000/026/152/gigachadd.jpg' },
+  { id:'drake',         img:'https://i.imgflip.com/30b1gx.jpg' },
+  { id:'shrek',         img:'https://i.kym-cdn.com/entries/icons/facebook/000/012/178/shrek.jpg' },
+  { id:'baby_yoda',     img:'https://i.kym-cdn.com/entries/icons/mobile/000/031/827/bright.jpg' },
+  { id:'leonidas',      img:'https://i.kym-cdn.com/entries/icons/facebook/000/000/026/Gerard-Butler-This-Is-Sparta.jpg' },
+  { id:'fire_dog',      img:'https://i.imgflip.com/wxica.jpg' },
+  { id:'distracted_bf', img:'https://i.imgflip.com/1ur9b0.jpg' },
+  { id:'surprised_pika',img:'https://i.imgflip.com/2kbn1e.jpg' },
+  { id:'woman_cat',     img:'https://i.imgflip.com/345v97.jpg' },
+  { id:'galaxy_brain',  img:'https://i.imgflip.com/1jwhww.jpg' },
+  { id:'harold',        img:'https://i.imgflip.com/gk5el.jpg' },
+  { id:'minion',        img:'https://i.imgflip.com/26jxvz.jpg' },
+  { id:'salt_bae',      img:'https://i.kym-cdn.com/entries/icons/facebook/000/021/971/Salt-Bae-001.jpg' },
+  { id:'two_buttons',   img:'https://i.imgflip.com/1g8my4.jpg' },
+  { id:'expand_brain',  img:'https://i.imgflip.com/1jwhww.jpg' },
+  { id:'confused_math', img:'https://i.kym-cdn.com/entries/icons/facebook/000/021/464/14608107_1180665285312703_1558693314_n.jpg' },
+  { id:'mock_spong',    img:'https://i.imgflip.com/1otk96.jpg' },
+  { id:'stonks',        img:'https://i.kym-cdn.com/entries/icons/facebook/000/029/959/Screen_Shot_2019-06-05_at_1.26.32_PM.jpg' },
+  { id:'uno_reverse',   img:'https://i.imgflip.com/3lmzyx.jpg' },
+  { id:'bernie',        img:'https://i.imgflip.com/3oevdk.jpg' },
+  { id:'disaster_girl', img:'https://i.imgflip.com/23ls.jpg' }
+];
+
+const AVATAR_IMGS = {};
+MEME_AVATARS.forEach(a => AVATAR_IMGS[a.id] = a.img);
+
+// ═══════════════════════════════════════════
+// SETUP UI
+// ═══════════════════════════════════════════
+let selectedP2Avatar = 'trollface';
+
+function initSetup() {
+  // Load P1 info
+  const p1Name   = localStorage.getItem('ml_name') || 'Player 1';
+  const p1Avatar = localStorage.getItem('ml_avatar') || 'doge';
+  document.getElementById('p1-name-display').textContent = p1Name;
+  const p1Img = document.getElementById('p1-avatar-img');
+  p1Img.src = AVATAR_IMGS[p1Avatar] || AVATAR_IMGS.doge;
+
+  // Build P2 avatar grid
+  const grid = document.getElementById('p2-avatar-grid');
+  grid.innerHTML = '';
+  MEME_AVATARS.forEach(av => {
+    const img = document.createElement('img');
+    img.className = 'av-opt' + (av.id === selectedP2Avatar ? ' selected' : '');
+    img.src = av.img;
+    img.title = av.id;
+    img.onerror = function() { this.style.display='none'; };
+    img.addEventListener('click', () => {
+      grid.querySelectorAll('.av-opt').forEach(i => i.classList.remove('selected'));
+      img.classList.add('selected');
+      selectedP2Avatar = av.id;
+    });
+    grid.appendChild(img);
+  });
+
+  document.getElementById('setup-modal').style.display = 'flex';
+}
+
+function startGame() {
+  let p2Name = document.getElementById('p2-name-input').value.trim();
+  if(!p2Name) p2Name = 'Player 2';
+
+  const p1Name   = localStorage.getItem('ml_name') || 'Player 1';
+  const p1Avatar = localStorage.getItem('ml_avatar') || 'doge';
+
+  document.getElementById('setup-modal').style.display = 'none';
+  initGame(p1Name, p1Avatar, p2Name, selectedP2Avatar);
+}
+
+function showSetup() {
+  document.getElementById('game-over').className = '';
+  document.getElementById('game-over').style.display = 'none';
+  document.getElementById('p2-name-input').value = '';
+  initSetup();
+}
+
+// ═══════════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════════
+let G = {};
+
+function freshCard(def) {
+  return {
+    ...JSON.parse(JSON.stringify(def)),
+    iid: Math.random().toString(36).slice(2,10),
+    curHp: def.hp,
+    curAtk: def.atk,
+    exhausted: true,
+    status: {},
+    passive: def.passive ? JSON.parse(JSON.stringify(def.passive)) : null,
+    battlecry: def.battlecry ? JSON.parse(JSON.stringify(def.battlecry)) : null
+  };
+}
+
+function buildDeck() {
+  const shuffled = [...CARDS].sort(()=>Math.random()-.5);
+  return shuffled.map(freshCard);
+}
+
+function newPlayer(name, avatarId) {
+  return {
+    hp:30, maxHp:30, mana:0, maxMana:0,
+    hand:[], field:[], deck:buildDeck(),
+    name, avatarId, turnCount:0
+  };
+}
+
+function initGame(p1Name, p1Avatar, p2Name, p2Avatar) {
+  document.getElementById('game-over').className = '';
+  document.getElementById('game-over').style.display = 'none';
+
+  const cfg      = JSON.parse(localStorage.getItem('ml_settings')||'{}');
+  const handSize = Math.max(3, Math.min(6, parseInt(cfg.handSize)||4));
+
+  G = {
+    player: newPlayer(p1Name, p1Avatar),
+    ai:     newPlayer(p2Name, p2Avatar),
+    turn: 'player',
+    sel: null,
+    gameOver: false
+  };
+
+  for(let i=0; i<handSize; i++) drawCard(G.player);
+  for(let i=0; i<handSize; i++) drawCard(G.ai);
+
+  updateHeroPortraits();
+  updateNameLabels();
+
+  clearLog();
+  log(`⚔️ ${p1Name} vs ${p2Name}! May the dankest memes win!`, 'ev');
+  startTurn();
+}
+
+function updateHeroPortraits() {
+  // Bottom (current active player)
+  const pEl = document.getElementById('player-hero');
+  const pUrl = AVATAR_IMGS[G.player.avatarId] || AVATAR_IMGS.doge;
+  pEl.innerHTML = `<img src="${pUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;" onerror="this.outerHTML='🧙'">`;
+  pEl.style.borderColor = '#4a8aff';
+
+  // Top (waiting player)
+  const aEl = document.getElementById('ai-hero');
+  const aUrl = AVATAR_IMGS[G.ai.avatarId] || AVATAR_IMGS.trollface;
+  aEl.innerHTML = `<img src="${aUrl}" style="width:100%;height:100%;object-fit:cover;object-position:center top;border-radius:50%;" onerror="this.outerHTML='😈'">`;
+  aEl.style.borderColor = '#ff55aa';
+
+  // Re-attach hp elements (they're now inside the portrait wrapper div via hero-hp)
+  // HP is managed by render() via getElementById, so we need them to exist
+  document.getElementById('player-hero').parentElement.querySelector('.hero-hp').id = 'player-hp';
+  document.getElementById('ai-hero').parentElement.querySelector('.hero-hp').id = 'ai-hp';
+}
+
+function updateNameLabels() {
+  document.getElementById('player-name-label').textContent = G.player.name;
+  document.getElementById('ai-name-label').textContent = G.ai.name;
+}
+
+// ═══════════════════════════════════════════
+// DECK / DRAW
+// ═══════════════════════════════════════════
+function drawCard(p) {
+  if(p.deck.length === 0) {
+    log(`${p.name} ran out of cards! -3 fatigue.`, 'dmg');
+    hurtHero(p, 3);
+    return;
+  }
+  if(p.hand.length >= 10) {
+    p.deck.shift();
+    log(`${p.name}'s hand is full — card burned.`, 'ev');
+    return;
+  }
+  p.hand.push(p.deck.shift());
+}
+
+// ═══════════════════════════════════════════
+// TURN MANAGEMENT
+// ═══════════════════════════════════════════
+function startTurn() {
+  if(G.gameOver) return;
+  const p = G.player;
+  G.turn = 'player';
+  G.sel = null;
+
+  p.turnCount++;
+  p.maxMana = Math.min(10, p.turnCount);
+  p.mana = p.maxMana;
+
+  // Draw (skip on each player's first turn — opening hand already dealt)
+  if(p.turnCount > 1) drawCard(p);
+
+  // Refresh field + passives tick
+  p.field.forEach(c => {
+    c.exhausted = false;
+
+    if(c.passive) {
+      if(c.passive.type==='evolve' || c.passive.type==='stonks') {
+        c.curAtk += c.passive.gain;
+        log(`${c.passive.type==='stonks'?'📈':'🧠'} ${c.name} ${c.passive.type==='stonks'?'STONKS':'expands'}! ATK now ${c.curAtk}.`, 'ev');
+      }
+      if(c.passive.type==='gang_up') recalcGang(p);
+      if(c.passive.type==='burst') {
+        c.passive.turn++;
+        if(c.passive.turn >= 3 && c.passive.stored > 0) {
+          log(`💣 ${c.name} releases ${c.passive.stored} burst damage on opponent hero!`, 'dmg');
+          hurtHero(G.ai, c.passive.stored);
+          c.passive.stored = 0;
+          c.passive.turn = 0;
+        }
+      }
+    }
+
+    // Burn tick
+    if(c.status.burn) {
+      c.status.burn.turns--;
+      log(`🔥 ${c.name} burns for ${c.status.burn.amt}!`, 'dmg');
+      hurtCard(c, p, c.status.burn.amt, false);
+      if(c.status.burn.turns <= 0) delete c.status.burn;
+    }
+  });
+
+  render();
+  updateTurnUI();
+}
+
+function endTurn() {
+  if(G.turn !== 'player' || G.gameOver) return;
+  G.sel = null;
+  const currentName = G.player.name;
+  const nextName    = G.ai.name;
+
+  log(`🔄 ${currentName} ends their turn.`, 'ev');
+
+  // Show pass overlay
+  document.getElementById('pass-to-name').textContent = `Hand it to ${nextName}!`;
+  document.getElementById('pass-from-msg').textContent = `${currentName} has finished their turn — don't peek!`;
+  document.getElementById('pass-overlay').style.display = 'flex';
+}
+
+function readyToPlay() {
+  document.getElementById('pass-overlay').style.display = 'none';
+
+  // Swap active/waiting players
+  [G.player, G.ai] = [G.ai, G.player];
+
+  // Update visuals to reflect new active player
+  updateHeroPortraits();
+  updateNameLabels();
+
+  startTurn();
+}
+
+function updateTurnUI() {
+  document.getElementById('turn-indicator').textContent = `⚔️ ${G.player.name}'s Turn`;
+  document.getElementById('end-turn-btn').disabled = false;
+}
+
+// ═══════════════════════════════════════════
+// PLAY A CARD
+// ═══════════════════════════════════════════
+function playCard(card, p) {
+  if(p.mana < card.cost) { log('❌ Not enough mana!', 'ev'); return false; }
+  if(p.field.length >= 5) { log('❌ Field is full!', 'ev'); return false; }
+
+  p.mana -= card.cost;
+  p.hand = p.hand.filter(c=>c.iid!==card.iid);
+
+  card.exhausted = !(card.kw && card.kw.includes('rush'));
+  card.curHp = card.hp;
+  card.curAtk = card.atk;
+  card.status = {};
+  if(card.passive) {
+    if(card.passive.type==='enrage') card.passive.used=false;
+    if(card.passive.type==='first_atk_double') card.passive.used=false;
+    if(card.passive.type==='first_dmg_reduce') card.passive.used=false;
+    if(card.passive.type==='burst'){ card.passive.stored=0; card.passive.turn=0; }
+  }
+
+  p.field.push(card);
+  log(`🎴 ${p.name} plays ${card.name}!`, 'ev');
+
+  if(card.battlecry) doBattlecry(card, p);
+  recalcGangs(p);
+  render();
+  return true;
+}
+
+function doBattlecry(card, p) {
+  const opp = p === G.player ? G.ai : G.player;
+  const bc = card.battlecry;
+
+  switch(bc.type) {
+    case 'draw':
+      for(let i=0;i<bc.n;i++) drawCard(p);
+      log(`🃏 ${card.name} draws ${bc.n} card(s)!`, 'ev');
+      break;
+
+    case 'zap_hero':
+      hurtHero(opp, bc.amt);
+      log(`⚡ ${card.name} zaps ${opp.name} for ${bc.amt}!`, 'dmg');
+      break;
+
+    case 'silence': {
+      const tgt = pickSilenceTarget(opp);
+      if(tgt) {
+        if(tgt.passive && tgt.passive.type==='debuff_immune') {
+          log(`${tgt.name} is immune to silence!`, 'ev');
+        } else {
+          tgt.passive=null; tgt.battlecry=null; tgt.kw=[];
+          tgt.abilityText='(Silenced 😾)';
+          log(`😾 ${card.name} silences ${tgt.name}!`, 'ev');
+        }
+      }
+      break;
+    }
+
+    case 'snipe': {
+      const target = opp.field.length
+        ? opp.field.reduce((a,b)=>a.curHp>b.curHp?a:b)
+        : null;
+      if(target) {
+        log(`🎯 Galaxy Brain fires at ${target.name} for ${bc.amt}!`, 'dmg');
+        hurtCard(target, opp, bc.amt, false);
+      } else {
+        hurtHero(opp, bc.amt);
+        log(`🎯 Galaxy Brain fires at ${opp.name}'s face for ${bc.amt}!`, 'dmg');
+      }
+      break;
+    }
+
+    case 'burn': {
+      if(opp.field.length) {
+        const t = opp.field[Math.floor(Math.random()*opp.field.length)];
+        t.status.burn = {amt:bc.amt, turns:bc.turns};
+        log(`🧂 ${card.name} salts ${t.name}! Burns ${bc.amt}/turn for ${bc.turns} turns!`, 'ev');
+      } else {
+        log(`🧂 ${card.name} has no target... seasons the air.`, 'ev');
+      }
+      break;
+    }
+
+    case 'chaos': {
+      const fx = [
+        ()=>{ drawCard(p); log('🎲 Chaos: Drew a card!','ev'); },
+        ()=>{ hurtHero(opp,5); log(`🎲 Chaos: Zapped ${opp.name} for 5!`,'dmg'); },
+        ()=>{ p.hp=Math.min(p.maxHp,p.hp+6); log('🎲 Chaos: Healed 6 HP!','heal'); },
+        ()=>{ p.field.forEach(c=>c.curAtk+=2); log('🎲 Chaos: All your minions +2 ATK!','ev'); },
+        ()=>{
+          if(opp.field.length){
+            const t=opp.field[Math.floor(Math.random()*opp.field.length)];
+            hurtCard(t,opp,8,false); log(`🎲 Chaos: Bolt hits ${t.name} for 8!`,'dmg');
+          } else { hurtHero(opp,8); log(`🎲 Chaos: Bolt hits ${opp.name}'s face for 8!`,'dmg'); }
+        },
+        ()=>{ drawCard(p); drawCard(p); log('🎲 Chaos: Drew 2 cards!','ev'); }
+      ];
+      fx[Math.floor(Math.random()*fx.length)]();
+      break;
+    }
+
+    case 'copy_buff': {
+      const srcs = opp.field.filter(c=>c.curAtk>c.atk);
+      if(srcs.length) {
+        const src=srcs[Math.floor(Math.random()*srcs.length)];
+        const diff=src.curAtk-src.atk;
+        card.curAtk+=diff;
+        log(`🔁 ${card.name} copies +${diff} ATK from ${src.name}!`, 'ev');
+      } else {
+        log(`🔁 ${card.name} finds nothing worth copying.`, 'ev');
+      }
+      break;
+    }
+
+    case 'heal_all':
+      p.field.forEach(c=>{ if(c.iid!==card.iid) c.curHp=Math.min(c.hp,c.curHp+bc.amt); });
+      p.hp=Math.min(p.maxHp,p.hp+bc.amt);
+      log(`🧤 ${card.name} heals all allies and ${p.name} for ${bc.amt}!`, 'heal');
+      break;
+
+    case 'aoe':
+      [...opp.field].forEach(c=>{ log(`💥 AOE hits ${c.name} for ${bc.amt}!`,'dmg'); hurtCard(c,opp,bc.amt,false); });
+      hurtHero(opp,bc.amt);
+      log(`💥 Disaster Girl blasts ${opp.name}'s face for ${bc.amt}!`, 'dmg');
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════
+// COMBAT
+// ═══════════════════════════════════════════
+function hurtCard(card, owner, dmg, isAtk) {
+  const p = card.passive;
+
+  if(p && p.type==='burn_immune' && card.status.burn) {
+    log(`🔥 ${card.name} is immune to burn!`, 'ev');
+    return 'dodged';
+  }
+  if(p && p.type==='dodge' && isAtk && Math.random()<p.chance) {
+    log(`🐕 ${card.name} dodges! Much evade!`, 'ev');
+    showFloat(card, '💨DODGE', '#aaff88');
+    return 'dodged';
+  }
+  if(p && p.type==='dodge_counter' && isAtk && Math.random()<p.chance) {
+    log(`🤔 ${card.name} dodges and counters!`, 'ev');
+    return 'dodge_counter';
+  }
+  if(p && p.type==='full_reflect' && isAtk) {
+    log(`🔄 ${card.name}: No U! Attack reflected!`, 'ev');
+    showFloat(card, '🔄NO U', '#ff4444');
+    return 'reflected';
+  }
+  if(p && p.type==='reflect_chance' && isAtk && Math.random()<p.chance) {
+    log(`🌀 ${card.name} uses the Force to reflect!`, 'ev');
+    return 'reflected';
+  }
+  if(p && p.type==='first_dmg_reduce' && !p.used && isAtk) {
+    dmg = Math.max(0, dmg-p.amt);
+    p.used = true;
+    log(`🟢 ${card.name}: First attack reduced by ${p.amt}!`, 'ev');
+  }
+
+  if(p && p.type==='burst') {
+    p.stored += dmg;
+    log(`😬 ${card.name} absorbs ${dmg} (${p.stored} stored).`, 'ev');
+    card.curHp -= dmg;
+    shakeCard(card);
+  } else {
+    card.curHp -= dmg;
+    shakeCard(card);
+  }
+
+  showFloat(card, `-${dmg}`, '#ff5555');
+
+  if(p && p.type==='enrage' && !p.used && dmg>0) {
+    card.curAtk += p.bonus;
+    p.used = true;
+    log(`😡 ${card.name} ENRAGES! ATK +${p.bonus} (now ${card.curAtk})!`, 'ev');
+  }
+
+  if(p && p.type==='reflect' && isAtk) {
+    const srcCard = G.sel;
+    if(srcCard) {
+      log(`↩️ ${card.name} reflects ${p.amt} back!`, 'ev');
+      hurtCard(srcCard, G.player, p.amt, false);
+    }
+  }
+
+  if(card.curHp <= 0) killCard(card, owner);
+  return true;
+}
+
+function hurtHero(p, dmg) {
+  p.hp = Math.max(0, p.hp-dmg);
+  const heroId = p === G.player ? 'player-hero' : 'ai-hero';
+  const el = document.getElementById(heroId);
+  if(el) {
+    const r = el.getBoundingClientRect();
+    showFloatAt(r.left+r.width/2, r.top+r.height/2, `-${dmg}`, '#ff4444');
+    el.style.animation='none'; void el.offsetWidth; el.style.animation='shake .3s ease';
+  }
+  render();
+  checkWin();
+}
+
+function killCard(card, owner) {
+  owner.field = owner.field.filter(c=>c.iid!==card.iid);
+  log(`💀 ${card.name} was destroyed!`, 'die');
+  recalcGangs(owner);
+  render();
+}
+
+function doAttack(attacker, attackerOwner, target, targetOwner) {
+  const tauntCards = targetOwner.field.filter(c=>c.kw&&c.kw.includes('taunt'));
+  if(tauntCards.length && !(target.kw&&target.kw.includes('taunt'))) {
+    log('⚠️ Must attack the Taunt minion first!', 'ev');
+    return false;
+  }
+
+  attacker.exhausted = true;
+  let atkDmg = attacker.curAtk;
+
+  if(attacker.passive?.type==='first_atk_double' && !attacker.passive.used) {
+    atkDmg *= 2;
+    attacker.passive.used = true;
+    log(`🎤 ${attacker.name}: First attack DOUBLED!`, 'ev');
+  }
+  if(attacker.passive?.type==='last_stand' && attacker.curHp/attacker.hp <= .30) {
+    atkDmg *= attacker.passive.mult;
+    log(`⚔️ ${attacker.name}: THIS IS SPARTA! DOUBLE DAMAGE!`, 'ev');
+  }
+
+  log(`⚔️ ${attacker.name} attacks ${target.name}! (${atkDmg} vs ${target.curAtk})`, 'ev');
+
+  G.sel = attacker;
+  const res = hurtCard(target, targetOwner, atkDmg, true);
+
+  if(res==='reflected') {
+    hurtCard(attacker, attackerOwner, atkDmg, false);
+  } else if(res==='dodge_counter') {
+    hurtCard(attacker, attackerOwner, target.curAtk, false);
+  } else if(res!=='dodged') {
+    hurtCard(attacker, attackerOwner, target.curAtk, false);
+  }
+
+  if(attacker.passive?.type==='lifelink') {
+    attackerOwner.hp = Math.min(attackerOwner.maxHp, attackerOwner.hp+atkDmg);
+    log(`💚 ${attacker.name} lifelink heals ${attackerOwner.name} for ${atkDmg}!`, 'heal');
+  }
+
+  G.sel = null;
+  render();
+  return true;
+}
+
+function doAttackHero(attacker, attackerOwner, defOwner) {
+  const tauntCards = defOwner.field.filter(c=>c.kw&&c.kw.includes('taunt'));
+  if(tauntCards.length) {
+    log('⚠️ Must attack the Taunt minion first!', 'ev');
+    return false;
+  }
+
+  attacker.exhausted = true;
+  let atkDmg = attacker.curAtk;
+
+  if(attacker.passive?.type==='first_atk_double' && !attacker.passive.used) {
+    atkDmg *= 2; attacker.passive.used=true;
+    log(`🎤 ${attacker.name}: DOUBLE first attack!`, 'ev');
+  }
+  if(attacker.passive?.type==='last_stand' && attacker.curHp/attacker.hp<=.30) {
+    atkDmg *= attacker.passive.mult;
+    log(`⚔️ ${attacker.name}: SPARTA KICK to the face!`, 'ev');
+  }
+
+  log(`🗡️ ${attacker.name} attacks ${defOwner.name}'s hero for ${atkDmg}!`, 'dmg');
+  hurtHero(defOwner, atkDmg);
+
+  if(attacker.passive?.type==='lifelink') {
+    attackerOwner.hp=Math.min(attackerOwner.maxHp,attackerOwner.hp+atkDmg);
+    log(`💚 Lifelink heals ${attackerOwner.name} for ${atkDmg}!`, 'heal');
+  }
+
+  G.sel=null;
+  render();
+  return true;
+}
+
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+function pickSilenceTarget(p) {
+  if(!p.field.length) return null;
+  return p.field[Math.floor(Math.random()*p.field.length)];
+}
+function recalcGang(p) {
+  const minions = p.field.filter(c=>c.id==='minion');
+  minions.forEach(c=>{ c.curAtk = c.atk + (minions.length-1); });
+}
+function recalcGangs(p) { recalcGang(p); }
+
+// ═══════════════════════════════════════════
+// WIN CONDITION
+// ═══════════════════════════════════════════
+function checkWin() {
+  if(G.gameOver) return;
+  if(G.player.hp<=0) { G.gameOver=true; showGameOver(G.ai, G.player); }
+  else if(G.ai.hp<=0){ G.gameOver=true; showGameOver(G.player, G.ai); }
+}
+
+function showGameOver(winner, loser) {
+  // Track win for profile if the winner is P1 (saved profile)
+  const p1Name = localStorage.getItem('ml_name') || 'Player 1';
+  if(winner.name === p1Name) {
+    localStorage.setItem('ml_wins', (parseInt(localStorage.getItem('ml_wins')||0)+1));
+  } else {
+    localStorage.setItem('ml_losses', (parseInt(localStorage.getItem('ml_losses')||0)+1));
+  }
+
+  const el = document.getElementById('game-over');
+  el.className = 'show win';
+  el.style.display = 'flex';
+  document.getElementById('go-title').textContent = `🏆 ${winner.name} WINS!`;
+  document.getElementById('go-sub').textContent =
+    `${loser.name} has been ratio'd into oblivion. GGs! Press rematch to go again.`;
+}
+
+// ═══════════════════════════════════════════
+// UI / RENDER
+// ═══════════════════════════════════════════
+function render() {
+  const phEl = document.getElementById('player-hp');
+  const ahEl = document.getElementById('ai-hp');
+  if(phEl) { phEl.textContent = G.player.hp; phEl.style.color = G.player.hp<=10?'#ff4444':'#44ff88'; }
+  if(ahEl) { ahEl.textContent = G.ai.hp;     ahEl.style.color = G.ai.hp<=10?'#ff4444':'#44ff88'; }
+
+  document.getElementById('player-deck').textContent = G.player.deck.length;
+  document.getElementById('ai-deck').textContent     = G.ai.deck.length;
+
+  renderMana('player-mana', G.player);
+  renderMana('ai-mana', G.ai);
+  renderField('player-field', G.player, false);
+  renderField('ai-field', G.ai, true);
+  renderHand();
+  renderAIHand();
+}
+
+function renderMana(id, p) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  for(let i=0; i<p.maxMana; i++) {
+    const d = document.createElement('div');
+    d.className = 'crystal '+(i<p.mana?'full':'empty');
+    el.appendChild(d);
+  }
+  const lbl = document.createElement('span');
+  lbl.className = 'mana-label';
+  lbl.textContent = `${p.mana}/${p.maxMana}`;
+  el.appendChild(lbl);
+}
+
+function renderField(id, p, isOpp) {
+  const el = document.getElementById(id);
+  [...el.querySelectorAll('.card')].forEach(c=>c.remove());
+
+  p.field.forEach(card => {
+    const ce = makeCardEl(card, p, false);
+
+    if(!isOpp) {
+      if(G.turn==='player' && !card.exhausted && !G.sel) ce.classList.add('can-atk');
+      if(G.sel===card) ce.classList.add('selected');
+      ce.addEventListener('click', ()=>{
+        if(G.turn!=='player'||G.gameOver) return;
+        if(G.sel===card) { G.sel=null; render(); return; }
+        if(G.sel) { G.sel=null; render(); return; }
+        if(card.exhausted) { log(`${card.name} already attacked this turn.`, 'ev'); return; }
+        G.sel = card;
+        log(`🎯 ${card.name} ready. Click an enemy minion or their hero.`, 'ev');
+        render();
+      });
+    } else {
+      if(G.sel) ce.classList.add('targetable');
+      ce.addEventListener('click', ()=>{
+        if(G.turn!=='player'||G.gameOver) return;
+        if(!G.sel) { log('⚠️ Select your own card first!', 'ev'); return; }
+        doAttack(G.sel, G.player, card, G.ai);
+      });
+    }
+
+    el.appendChild(ce);
+  });
+}
+
+function renderHand() {
+  const el = document.getElementById('player-hand');
+  el.innerHTML = '';
+  G.player.hand.forEach(card => {
+    const ce = makeCardEl(card, G.player, true);
+    if(card.cost>G.player.mana || G.turn!=='player') ce.classList.add('unaffordable');
+    ce.addEventListener('click', ()=>{
+      if(G.turn!=='player'||G.gameOver) return;
+      if(G.sel) { G.sel=null; render(); return; }
+      if(card.cost>G.player.mana) { log(`❌ Need ${card.cost} mana (have ${G.player.mana}).`, 'ev'); return; }
+      playCard(card, G.player);
+    });
+    ce.addEventListener('mouseenter', e=>showTooltip(card, e));
+    ce.addEventListener('mousemove',  e=>moveTooltip(e));
+    ce.addEventListener('mouseleave', ()=>hideTooltip());
+    el.appendChild(ce);
+  });
+}
+
+function renderAIHand() {
+  const el = document.getElementById('ai-hand');
+  el.innerHTML = '';
+  G.ai.hand.forEach(()=>{
+    const d = document.createElement('div');
+    d.className = 'ai-card-back';
+    d.textContent = '🂠';
+    el.appendChild(d);
+  });
+}
+
+function makeCardEl(card, owner, isHand) {
+  const el = document.createElement('div');
+  el.className = 'card';
+  el.dataset.iid = card.iid;
+  if(!isHand && card.exhausted) el.classList.add('exhausted');
+
+  const hpPct = Math.max(0,(card.curHp/card.hp)*100);
+  const hpColor = hpPct>60?'#44ff88':hpPct>30?'#ffcc44':'#ff4444';
+  const kwBadges = (card.kw||[]).map(k=>`<span class="kw kw-${k}">${k}</span>`).join('');
+  const statusIcons = (card.status?.burn?'🔥':'');
+
+  el.innerHTML=`
+    <div class="card-inner r-${card.rarity}" style="background:${card.bg};">
+      <div class="cost-badge">${card.cost}</div>
+      ${statusIcons?`<div class="status-row"><span class="sbadge">${statusIcons}</span></div>`:''}
+      <div class="c-name">${card.name}</div>
+      <div class="c-art">
+        <img src="${card.img}" alt="${card.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <span class="art-emoji" style="display:none">${card.art}</span>
+      </div>
+      <div class="c-ability">
+        <div class="kwrap">${kwBadges}</div>
+        ${card.abilityText||card.ability}
+      </div>
+      <div class="c-stats">
+        <span class="c-atk">⚔️${card.curAtk}</span>
+        <span class="c-hp" style="color:${hpColor}">❤️${card.curHp}</span>
+      </div>
+      <div class="hp-track">
+        <div class="hp-fill" style="width:${hpPct}%;background:${hpColor};"></div>
+      </div>
+    </div>
+  `;
+
+  el.addEventListener('mouseenter', e=>showTooltip(card, e));
+  el.addEventListener('mousemove',  e=>moveTooltip(e));
+  el.addEventListener('mouseleave', ()=>hideTooltip());
+  return el;
+}
+
+// ═══════════════════════════════════════════
+// FLOATING DAMAGE
+// ═══════════════════════════════════════════
+function showFloat(card, txt, color) {
+  const el = document.querySelector(`[data-iid="${card.iid}"]`);
+  if(!el) return;
+  const r = el.getBoundingClientRect();
+  showFloatAt(r.left+r.width/2, r.top+r.height/3, txt, color);
+}
+function showFloatAt(x, y, txt, color) {
+  const d = document.createElement('div');
+  d.className = 'dmg-float';
+  d.textContent = txt;
+  d.style.cssText = `left:${x}px;top:${y}px;color:${color};font-size:1.4em;transform:translateX(-50%);`;
+  document.body.appendChild(d);
+  setTimeout(()=>d.remove(), 900);
+}
+function shakeCard(card) {
+  const el = document.querySelector(`[data-iid="${card.iid}"]`);
+  if(!el) return;
+  el.style.animation='none'; void el.offsetWidth; el.style.animation='shake .3s ease';
+}
+
+// ═══════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════
+function showTooltip(card, e) {
+  const t = document.getElementById('tooltip');
+  document.getElementById('tt-name').textContent = `${card.name} (${card.cost}💧)`;
+  document.getElementById('tt-body').innerHTML =
+    `<b>ATK:</b> ${card.curAtk} &nbsp; <b>HP:</b> ${card.curHp}/${card.hp}<br>
+     <b>Rarity:</b> ${card.rarity}<br>${card.ability}`;
+  document.getElementById('tt-flavor').textContent = `"${card.flavor}"`;
+  t.style.display = 'block';
+  moveTooltip(e);
+}
+function moveTooltip(e) {
+  const t = document.getElementById('tooltip');
+  let x=e.clientX+12, y=e.clientY-10;
+  if(x+205>window.innerWidth) x=e.clientX-215;
+  if(y+t.offsetHeight>window.innerHeight) y=e.clientY-t.offsetHeight;
+  t.style.left=x+'px'; t.style.top=y+'px';
+}
+function hideTooltip() { document.getElementById('tooltip').style.display='none'; }
+
+// ═══════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════
+function log(msg, type='') {
+  const el = document.getElementById('log');
+  const d = document.createElement('div');
+  d.className = 'le '+(type||'');
+  d.textContent = msg;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+  while(el.children.length>60) el.removeChild(el.firstChild);
+}
+function clearLog() { document.getElementById('log').innerHTML=''; }
+
+// ═══════════════════════════════════════════
+// HERO CLICK (attack face)
+// ═══════════════════════════════════════════
+document.getElementById('ai-hero').addEventListener('click', ()=>{
+  if(G.turn!=='player'||G.gameOver) return;
+  if(!G.sel) { log('⚠️ Select your own minion first!', 'ev'); return; }
+  doAttackHero(G.sel, G.player, G.ai);
+});
+
+document.getElementById('end-turn-btn').addEventListener('click', endTurn);
+
+// ═══════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', e=>{
+  if(e.key==='Escape') { G.sel=null; if(G.player) render(); }
+  if(e.key==='Enter' && G.player && G.turn==='player' && !G.gameOver) endTurn();
+});
+
+// ═══════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════
+initSetup();
+</script>
+</body>
+</html>
